@@ -11,7 +11,7 @@ def unwrap_model(model: nn.Module) -> nn.Module:
     Recursively unwraps a model from potential containers (as used in distributed training).
 
     Args:
-        model (`torch.nn.Module`): The model to unwrap.
+        model (torch.nn.Module): The model to unwrap.
     """
     # since there could be multiple levels of wrapping, unwrap recursively
     if hasattr(model, "module"):
@@ -32,7 +32,7 @@ class LLaVATrainer(Trainer):
         """
         
         ################ ####### Code changes from original transformers compute loss ######### ################ 
-        logit_save_path = "/scratch/ae2195/PPTP-KD-LLaVA-Med/llava/train/logits.json"  # Define your logit save path here
+        logit_save_path = "/scratch/ltl2113/PPTP-KD-LLaVA-Med/llava/train/logits.json"  # Define your logit save path here
 
         # Initialize the JSON file if it does not exist
         if logit_save_path and not os.path.exists(logit_save_path):
@@ -52,34 +52,20 @@ class LLaVATrainer(Trainer):
             self._past = outputs[self.args.past_index]
 
         ################ ###### Code changes from original transformers compute loss  ########## ################ 
-       
         # Extract and save logits for each input
         logits = outputs.logits if hasattr(outputs, "logits") else outputs[1]  # Depending on the model output format
+        # Print the size of the logits
+        print(f"Logits size: {logits.shape}")
         if logit_save_path:
             input_ids = inputs["input_ids"]
-            logits_to_save = []
-            for i, logit in enumerate(logits):
-                logit_dict = {
-                    "input_id": input_ids[i].cpu().tolist(),
-                    "logits": logit.cpu().tolist()
-                }
-                logits_to_save.append(logit_dict)
-            
-            # Append new logits to the JSON file
-            try:
-                with open(logit_save_path, 'r+') as f:
-                    try:
-                        existing_data = json.load(f)
-                    except json.JSONDecodeError:
-                        # If the file is empty or invalid, initialize it
-                        existing_data = []
-                    existing_data.extend(logits_to_save)
-                    f.seek(0)
-                    json.dump(existing_data, f)
-            except FileNotFoundError:
-                # If the file does not exist, create and initialize it
-                with open(logit_save_path, 'w') as f:
-                    json.dump(logits_to_save, f)
+            with open(logit_save_path, 'a') as f:  # Open file in append mode
+                for i, logit in enumerate(logits):
+                    logit_dict = {
+                        "input_id": input_ids[i].cpu().tolist(),
+                        "logits": logit.cpu().tolist()
+                    }
+                    # print("Current logit: ",logit_dict)
+                    f.write(json.dumps(logit_dict) + '\n')  # Write each logit set as a new line
 
         ################ ######  End of Changes ########## ################ 
 
