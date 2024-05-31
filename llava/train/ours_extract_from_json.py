@@ -15,8 +15,8 @@ def extract_n_entries(input_file, output_file, n):
     print(f"Extracted {n} entries and saved to {output_file}")
 
 # Example usage
-input_file = '/scratch/ae2195/LLaVA-Med/data/instruct/alignment_500k_filtered_file.json'  # Replace with your original JSON file name
-output_file = '/scratch/ae2195/LLaVA-Med/data/instruct/KD_alignment_500k_filtered_file.json'  # Replace with your desired new JSON file name
-n = 10  # Replace with the number of entries you want to extract
+input_file = '/scratch/ltl2113/LLaVA-Med/data/instruct/filtered_json_file.json'  # Replace with your original JSON file name
+output_file = '/scratch/ltl2113/LLaVA-Med/data/instruct/KD_filtered_json_file.json'  # Replace with your desired new JSON file name
+n = 30  # Replace with the number of entries you want to extract
 
 extract_n_entries(input_file, output_file, n)
