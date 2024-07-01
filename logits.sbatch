@@ -1,14 +1,15 @@
 #!/bin/bash 
 
+#SBATCH -q ebrainccs
 #SBATCH -p nvidia
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --gres=gpu:a100:1
+#SBATCH --cpus-per-task=3
+#SBATCH --gres=gpu:a100:3
 #SBATCH --time=40:00:00
-#SBATCH --mem=150GB
-#SBATCH -o may30_job_logits_saving_compression_6.%J.out
-#SBATCH -e may30_job_logits_saving_compression_6.%J.err
+#SBATCH --mem=200GB
+#SBATCH -o June2_job_logits_saving_fulldataset.%J.out
+#SBATCH -e June2_job_logits_saving_fulldataset.%J.err
 #SBATCH --job-name=logits_saving
 
 # Environment setup
@@ -40,7 +41,7 @@ conda activate llava-med
 #     --bf16 True \
 #     --output_dir ./checkpoints_for_logits_compute/stage2 \
 #     --num_train_epochs 1 \
-#     --per_device_train_batch_size 1 \
+#     --per_device_train_batch_size 4 \
 #     --per_device_eval_batch_size 4 \
 #     --gradient_accumulation_steps 16 \
 #     --evaluation_strategy "no" \
@@ -67,8 +68,14 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 # Set environment variables
 export HF_HOME="/scratch/ltl2113/huggingface_cache"
 
+# Add CUDA binaries to PATH
+export PATH=$/home/ltl2113/miniconda3/envs/llava-med/bin:$PATH
 
-torchrun --nnodes=1 --nproc_per_node=1 --master_port=25001 \
+# Add CUDA libraries to LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$/home/ltl2113/miniconda3/envs/llava-med/lib64:$LD_LIBRARY_PATH
+
+pip show torch 
+torchrun --nnodes=1 --nproc_per_node=3 --master_port=25001 \
     llava/train/train_mem.py \
     --model_name_or_path /scratch/ltl2113/LLaVA-Med/checkpoints/llava-med-7b-pretrain-SG1_Final \
     --data_path /scratch/ltl2113/LLaVA-Med/data/instruct/filtered_json_file.json \
@@ -76,11 +83,10 @@ torchrun --nnodes=1 --nproc_per_node=1 --master_port=25001 \
     --vision_tower openai/clip-vit-large-patch14 \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end True \
-    --tune_mm_mlp_adapter True \
     --bf16 True \
     --output_dir /scratch/ltl2113/LLaVA-Med/checkpoints/LLAVA_MED_SG2_logits \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 16 \
+    --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 4 \
     --gradient_accumulation_steps 8 \
     --evaluation_strategy "no" \
@@ -98,7 +104,4 @@ torchrun --nnodes=1 --nproc_per_node=1 --master_port=25001 \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --lazy_preprocess True \
-    --report_to wandb \
-    --run_name LLAVA_MED_SG2_logits
-
-
+    --report_to wandb

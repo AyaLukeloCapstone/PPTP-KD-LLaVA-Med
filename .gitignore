@@ -13,3 +13,6 @@ checkpoints/llava-med-7b-pretrain/
 llava/train/llava_trainer_og.py
 llava/train/train_og.py
 .ipynb_checkpoints
+llava/train/Dataset_logits
+*.sbatch
+
